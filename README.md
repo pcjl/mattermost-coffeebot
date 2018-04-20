@@ -2,6 +2,8 @@
 
 *Mattermost Coffeebot* is a bot written in Python that interacts with the [Mattermost API](https://api.mattermost.com/) using [`mattermostdriver`](https://github.com/Vaelor/python-mattermost-driver) and pairs users in your Mattermost team on a regular basis to meet each other.
 
+The bot will take users within a specific channel and message random pairs to meet up. The channel and frequency of these pairings can be configured.
+
 ### Features
 
 - Written in Python
