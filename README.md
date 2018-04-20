@@ -1,15 +1,19 @@
 # Mattermost Coffeebot
 
+*Mattermost Coffeebot* is a bot written in Python that interacts with the [Mattermost API](https://api.mattermost.com/) using [`mattermostdriver`](https://github.com/Vaelor/python-mattermost-driver) and pairs users in your Mattermost team on a regular basis to meet each other.
+
 ### Features
 
-- [x] Automatically pair Mattermost users
-- [x] Configurable pairing times (by modifying cronjob)
+- Written in Python
+- Uses the [Mattermost API](https://api.mattermost.com/)
+- Automatically pairs Mattermost users
+- Uses past pairing data to pair people with people they have not been paired with before
+- Configurable pairing times (by modifying cronjob)
 
 ### Future Features
 
-- [ ] Follow-ups to make sure paired users actually met
-- [ ] Better deployment process (deployment script)
-- [ ] Automatic database backups
+- Follow-ups to make sure paired users actually met
+- Better deployment process (deployment script)
 
 ### Technologies Used
 
@@ -23,20 +27,21 @@ As of right now, the project is deployed by manually cloning the repository onto
 
 The database is only used for storing previous pairings in order to increase the probability of pairing each user with another user they haven't been paired with before. Should the database be lost, any previous data will be gone, but the bot will still function, just without any data on previous pairings.
 
-Due to this, if you do use SQLite for your database, it is not ideal to use the Docker container on production because your database will be gone if your container gets stopped. However, theoretically, if you use a database hosted on a separate server or on RDS, it should be safe to use the Docker container. Unfortunately, this hasn't been tested yet, so please be cautious.
+Due to this, if you do use SQLite for your database, it is not ideal to use the Docker container on production because your database will be gone if your container gets stopped. However, theoretically, if you use a database hosted on a separate server or on RDS, it should be safe to use the Docker container.
 
 Here are the current steps to deploying:
 
-1. Clone the repo
+1. Clone the repository into a directory
 
 2. Install Python 3.4+, `pip`, and `cron`.
     - On Ubuntu, this can be done by running `sudo apt-get update && apt-get install -y -qq cron python3 python3-pip`
 
-3. Install the Python packages using `sudo pip3 install -r requirements.txt`
+3. Install the Python packages by running `sudo pip3 install -r requirements.txt` in the directory
 
 4. Create a `.env` file in the directory with all of your credentials/settings following the same format as the `example.env` file supplied
 
 5. Set up a cronjob with your frequency following the same format as the `example.crontab` file supplied
+    - This can be done by running `crontab -e` and adding the cronjob there
 
 ### Development
 
@@ -44,17 +49,17 @@ In order to set up a local development environment:
 
 *This assumes that you already have Docker installed*
 
-1. Clone the repo
+1. Clone the repository into a directory
 
 2. Create a `.env` file in the directory with all of your credentials/settings following the same format as the `example.env` file supplied
 
 3. Create a `crontab` file in the directory with your frequency following the same format as the `example.crontab` file supplied
 
-3. Build the Docker image using `docker-compose build`
+3. Build the Docker image by running `docker-compose build`
 
-4. Create the Docker container using `docker-compose up`
+4. Create the Docker container by running `docker-compose up`
 
-5. Run `bash` in the container using `docker exec -ti <CONTAINERID> bash`
+5. Run `bash` in the container by running `docker exec -ti <CONTAINERID> bash`
 
 6. Run the command `pair` (or allow the cronjob that was set up to run it)
 
