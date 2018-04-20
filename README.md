@@ -1,7 +1,5 @@
 # Mattermost Coffeebot
 
----
-
 ### Features
 
 - [x] Automatically pair Mattermost users
