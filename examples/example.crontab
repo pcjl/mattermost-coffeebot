@@ -1,0 +1,1 @@
+0 10 * * 1 root /usr/bin/python3 /root/mattermost-coffeebot/pair.py >> /var/log/coffeebot.log 2>&1
