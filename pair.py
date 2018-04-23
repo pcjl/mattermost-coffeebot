@@ -9,7 +9,7 @@ def main():
         'url': config.URL,
         'login_id': config.USERNAME,
         'password': config.PASSWORD,
-        'port': 443
+        'port': config.PORT
     }
     driver = Driver(driver_options)
 
