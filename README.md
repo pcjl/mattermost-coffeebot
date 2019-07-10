@@ -33,16 +33,18 @@ Due to this, if you do use SQLite for your database, it is not ideal to use the 
 
 Here are the current steps to deploying:
 
-1. Clone the repository into a directory
+1. Create a user that the bot will run as and add it to the rooms it will use to pair people.
 
-2. Install Python 3.4+, `pip`, and `cron`.
+2. Clone the repository into a directory
+
+3. Install Python 3.4+, `pip`, and `cron`.
     - On Ubuntu, this can be done by running `sudo apt-get update && apt-get install -y -qq cron python3 python3-pip`
 
-3. Install the Python packages by running `sudo pip3 install -r requirements.txt` in the directory
+4. Install the Python packages by running `sudo pip3 install -r requirements.txt` in the directory
 
-4. Create a `.env` file in the directory with all of your credentials/settings following the same format as the `example.env` file supplied
+5. Create a `.env` file in the directory with all of your credentials/settings following the same format as the `example.env` file supplied
 
-5. Set up a cronjob with your frequency following the same format as the `example.crontab` file supplied
+6. Set up a cronjob with your frequency following the same format as the `example.crontab` file supplied
     - This can be done by running `crontab -e` and adding the cronjob there
 
 ### Development
@@ -73,6 +75,7 @@ If you make any changes to the bot, you will have to rebuild the Docker image to
 MIT License
 
 Copyright (c) 2018 Patrick Liu
+Copyright (c) 2019 Gaelan D'costa
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

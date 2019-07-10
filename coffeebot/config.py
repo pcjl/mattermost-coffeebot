@@ -22,5 +22,5 @@ TEAM_NAME = os.getenv('COFFEEBOT_MATTERMOST_TEAM')
 CHANNEL_NAME = os.getenv('COFFEEBOT_MATTERMOST_CHANNEL')
 
 MESSAGE = """
-You have been matched to meet up! Please respond with your availabilities :)
+Hello! This week you have been matched up as conversation partners! I hope you meet up and have a great time :)
 """
