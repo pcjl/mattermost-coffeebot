@@ -9,6 +9,8 @@ else:
     DATABASE_URI = 'sqlite:////' + __DIR__ + '/../' + \
         os.getenv('COFFEEBOT_DATABASE_FILENAME')
 
+DEBUG = int(os.getenv('COFFEEBOT_DEBUG', 0))
+
 URL = os.getenv('COFFEEBOT_MATTERMOST_URL')
 PORT = int(os.getenv('COFFEEBOT_MATTERMOST_PORT'))
 
