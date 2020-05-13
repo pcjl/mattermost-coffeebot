@@ -1,3 +1,4 @@
-mattermostdriver==4.4.0
-python-dotenv==0.8.2
-sqlalchemy==1.3.0
+mattermostdriver==7.0.1
+PyMySQL==0.9.3
+python-json-logger==0.1.11
+sqlalchemy==1.3.16
