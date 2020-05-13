@@ -1,8 +1,29 @@
-version: '3.3'
+---
+version: '3.7'
+
 services:
-  server:
+  database:
+    image: mysql:5
+    ports:
+      - 3306:3306
+    volumes:
+      - /var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: coffeebot
+      MYSQL_USER: coffeebot
+      MYSQL_PASSWORD: coffeebot
+      MYSQL_DATABASE: coffeebot
+
+  coffeebot:
     build: .
-    container_name: mattermostcoffeebot
-    env_file:
-     - .env
-    tty: true
+    volumes:
+      - .:/usr/src/app
+    environment:
+      COFFEEBOT_DEBUG: '1'
+      COFFEEBOT_DATABASE_URI: mysql+pymysql://coffeebot:coffeebot@database:3306/coffeebot
+      COFFEEBOT_MATTERMOST_CHANNEL: ${COFFEEBOT_MATTERMOST_CHANNEL}
+      COFFEEBOT_MATTERMOST_PASSWORD: ${COFFEEBOT_MATTERMOST_PASSWORD}
+      COFFEEBOT_MATTERMOST_PORT: ${COFFEEBOT_MATTERMOST_PORT}
+      COFFEEBOT_MATTERMOST_TEAM: ${COFFEEBOT_MATTERMOST_TEAM}
+      COFFEEBOT_MATTERMOST_URL: ${COFFEEBOT_MATTERMOST_URL}
+      COFFEEBOT_MATTERMOST_USERNAME: ${COFFEEBOT_MATTERMOST_USERNAME}
