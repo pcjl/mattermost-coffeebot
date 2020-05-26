@@ -1,0 +1,68 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app: mattermost-coffeebot
+  name: mattermost-coffeebot
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app: mattermost-coffeebot
+  name: mattermost-coffeebot
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      labels:
+        app: mattermost-coffeebot
+    spec:
+      activeDeadlineSeconds: 7200
+      template:
+        metadata:
+          labels:
+            app: mattermost-coffeebot
+        spec:
+          containers:
+          - envFrom:
+            - configMapRef:
+                name: mattermost-coffeebot
+            - secretRef:
+                name: mattermost-coffeebot
+            # update image name
+            image: mattermost-coffeebot
+            name: coffeebot
+          restartPolicy: Never
+  # run every 2nd Monday at 10am (server time)
+  schedule: 0 10 */2 * 1
+  startingDeadlineSeconds: 1800
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: mattermost-coffeebot
+  name: mattermost-coffeebot
+data:
+  # update configuration
+  COFFEEBOT_DEBUG: "1"
+  COFFEEBOT_MATTERMOST_CHANNEL: mattermost-coffeebot
+  COFFEEBOT_MATTERMOST_PORT: "443"
+  COFFEEBOT_MATTERMOST_TEAM: mattermost-coffeebot
+  COFFEEBOT_MATTERMOST_URL: my.mattermost.com
+  COFFEEBOT_MATTERMOST_USERNAME: mattermost-coffeebot
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  labels:
+    app: mattermost-coffeebot
+  name: mattermost-coffeebot
+data:
+  # update secret values
+  COFFEEBOT_DATABASE_URI:
+  COFFEEBOT_MATTERMOST_PASSWORD:
