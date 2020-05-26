@@ -20,7 +20,7 @@ Base = declarative_base(cls=BaseModel)
 class User(Base):
     __tablename__ = 'users'
 
-    user_id = Column(String, nullable=False, unique=True)
+    user_id = Column(String(256), nullable=False, unique=True)
     active = Column(Boolean, default=True, nullable=False)
     is_paired = Column(Boolean, default=False)
 
@@ -34,11 +34,11 @@ class Pair(Base):
     __tablename__ = 'pairs'
 
     first_user_id = Column(
-        Integer, ForeignKey('users.user_id'))
+        String(256), ForeignKey('users.user_id'))
     first_user = relationship('User', foreign_keys=[first_user_id])
 
     second_user_id = Column(
-        Integer, ForeignKey('users.user_id'))
+        String(256), ForeignKey('users.user_id'))
     second_user = relationship('User', foreign_keys=[second_user_id])
 
     count = Column(Integer, default=0)

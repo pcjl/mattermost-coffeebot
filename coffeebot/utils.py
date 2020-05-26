@@ -2,7 +2,7 @@ import random
 
 from sqlalchemy.sql import text
 
-from coffeebot import config, session
+from coffeebot import config
 from coffeebot.models import User, Pair
 
 
@@ -49,7 +49,7 @@ def get_channel_members(driver, team_name, channel_name):
     return members
 
 
-def create_users(members):
+def create_users(session, members):
     """
     Create a User object in the database representing each Mattermost user
     given a list of current users in the channel.
@@ -71,7 +71,7 @@ def create_users(members):
     session.commit()
 
 
-def create_pairs(members):
+def create_pairs(session, members):
     """
     Create a Pair object in the database representing a potential pairing
     between two Mattermost users given a list of current users in the channel.
@@ -96,7 +96,7 @@ def create_pairs(members):
     session.commit()
 
 
-def get_pair(members):
+def get_pair(session, members):
     """
     Generate one pair of users from a list of members depending on the
     frequencies of each user's previous pairings.
@@ -122,7 +122,7 @@ def get_pair(members):
             WHERE p.first_user_id = :member
             AND u.is_paired = 0
             AND u.active = 1
-        )
+        ) AS paired
         ORDER BY count ASC
         LIMIT 1
     """)
@@ -163,7 +163,7 @@ def get_pair(members):
     return (member, paired_member)
 
 
-def get_pairs(members):
+def get_pairs(session, members):
     """
     Pair up all users from a list of members depending on the frequencies of
     each user's previous pairings.
@@ -177,7 +177,7 @@ def get_pairs(members):
 
     pairs = []
     while len(members) > 1:
-        pairs.append(get_pair(members))
+        pairs.append(get_pair(session, members))
 
     # Reset the is_paired flag for each user in preparation for the next time
     # users get paired
