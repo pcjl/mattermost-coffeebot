@@ -9,6 +9,7 @@ def main():
         'url': config.URL,
         'login_id': config.USERNAME,
         'password': config.PASSWORD,
+        'token': config.TOKEN,
         'port': config.PORT
     }
     driver = Driver(driver_options)
