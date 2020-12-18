@@ -19,6 +19,9 @@ USERNAME = os.getenv('COFFEEBOT_MATTERMOST_USERNAME')
 PASSWORD = os.getenv('COFFEEBOT_MATTERMOST_PASSWORD')
 TOKEN = os.getenv('COFFEEBOT_MATTERMOST_TOKEN')
 
+SKIP_TOWN_SQUARE = bool(os.getenv('COFFEEBOT_MATTERMOST_SKIP_TOWN_SQUARE'))
+SKIP_OFF_TOPIC = bool(os.getenv('COFFEEBOT_MATTERMOST_SKIP_OFF_TOPIC'))
+
 CHANNEL_MESSAGE = """
 Here we go with another round of paring you up. Stay tuned until the lottery
 has drawn your opponent.

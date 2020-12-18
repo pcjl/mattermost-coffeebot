@@ -256,6 +256,13 @@ def get_channels(driver):
             # Only public and private channels
             if channel['type'] not in ('O', 'P'):
                 continue
+
+            # Skip default channels
+            if config.SKIP_TOWN_SQUARE and channel['name'] == 'town-square':
+                continue
+            if config.SKIP_OFF_TOPIC and channel['name'] == 'off-topic':
+                continue
+
             '''
             # Retrieve all members
             members = set()

@@ -24,6 +24,8 @@ def main():
         print("Retrieving Coffee Buddies participants for {:s}/{:s}...".format(
             team_name, channel_name
         ))
+        if team_name != "itsec": continue
+        if channel_name != "steffen-test-channel": continue
         utils.message_channel(driver, team_name, channel_name)
         members = utils.get_channel_members(driver, team_name, channel_name)
         print("Successfully retrieved Coffee Buddies participants.")
