@@ -19,9 +19,11 @@ USERNAME = os.getenv('COFFEEBOT_MATTERMOST_USERNAME')
 PASSWORD = os.getenv('COFFEEBOT_MATTERMOST_PASSWORD')
 TOKEN = os.getenv('COFFEEBOT_MATTERMOST_TOKEN')
 
-TEAM_NAME = os.getenv('COFFEEBOT_MATTERMOST_TEAM')
-CHANNEL_NAME = os.getenv('COFFEEBOT_MATTERMOST_CHANNEL')
+CHANNEL_MESSAGE = """
+Here we go with another round of paring you up. Stay tuned until the lottery
+has drawn your opponent.
+"""
 
-MESSAGE = """
+PAIR_MESSAGE = """
 You have been matched to meet up! Please respond with your availabilities :)
 """
