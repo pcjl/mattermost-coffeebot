@@ -19,24 +19,29 @@ def main():
     driver.users.get_user('me')
     print("Successfully authenticated.")
 
-    print("Retrieving Coffee Buddies participants...")
-    team_name = config.TEAM_NAME
-    channel_name = config.CHANNEL_NAME
-    members = utils.get_channel_members(driver, team_name, channel_name)
-    print("Successfully retrieved Coffee Buddies participants.")
+    for team_name, channel_name in utils.get_channels(driver):
 
-    print("Preparing participants database...")
-    utils.create_users(members)
-    utils.create_pairs(members)
-    print("Succesfully prepared participants database.")
+        print("Retrieving Coffee Buddies participants for {:s}/{:s}...".format(
+            team_name, channel_name
+        ))
+        if team_name != "itsec": continue
+        if channel_name != "steffen-test-channel": continue
+        utils.message_channel(driver, team_name, channel_name)
+        members = utils.get_channel_members(driver, team_name, channel_name)
+        print("Successfully retrieved Coffee Buddies participants.")
 
-    print("Pairing Coffee Buddies participants...")
-    pairs = utils.get_pairs(members)
-    print("Successfully paired Coffee Buddies participants.")
+        print("Preparing participants database...")
+        utils.create_users(members)
+        utils.create_pairs(members)
+        print("Successfully prepared participants database.")
 
-    print("Messaging paired Coffee Buddies participants...")
-    utils.message_pairs(driver, pairs)
-    print("Successfully messaged paired Coffee Buddies participants.")
+        print("Pairing Coffee Buddies participants...")
+        pairs = utils.get_pairs(members)
+        print("Successfully paired Coffee Buddies participants.")
+
+        print("Messaging paired Coffee Buddies participants...")
+        utils.message_pairs(driver, pairs)
+        print("Successfully messaged paired Coffee Buddies participants.")
 
 
 if __name__ == '__main__':
