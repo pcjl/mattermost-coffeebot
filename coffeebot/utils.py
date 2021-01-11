@@ -169,15 +169,22 @@ def get_pairs(members):
     each user's previous pairings.
     Returns a list of tuples of user IDs.
     """
+    pairs = []
+    unmatched = None
+    if len(members) < 2:
+        return pairs, unmatched
+
     # In the case of an odd number of members, the user that is sequentially
     # last in the input list will have a lower chance of getting paired. In
     # order to make it fair, we shuffle the list so that everyone has an equal
     # chance of not getting paired
     random.shuffle(members)
 
-    pairs = []
     while len(members) > 1:
         pairs.append(get_pair(members))
+
+    if len(members) == 1:
+        unmatched = members[0]
 
     # Reset the is_paired flag for each user in preparation for the next time
     # users get paired
@@ -189,7 +196,7 @@ def get_pairs(members):
     session.execute(sql)
     session.commit()
 
-    return pairs
+    return pairs, unmatched
 
 
 def message_channel(driver, team_name, channel_name):
@@ -218,7 +225,6 @@ def message_pair(driver, pair):
     Returns the JSON response from the Mattermost API.
     """
     user_list = list(pair)
-
     channel = driver.channels.create_group_message_channel(user_list)
     channel_id = channel['id']
 
@@ -232,12 +238,37 @@ def message_pair(driver, pair):
     return response
 
 
-def message_pairs(driver, pairs):
+def message_unmatched(driver, unmatched):
+    """
+    Send a direct message to the unmatched user notifying them of others.
+    Returns the JSON response from the Mattermost API.
+    """
+    if not unmatched:
+        return
+
+    bot_id = driver.users.get_user('me')['id']
+    channel = driver.channels.create_direct_message_channel([bot_id, unmatched])
+    channel_id = channel['id']
+
+    message = config.UNMATCHED_MESSAGE
+    message_options = {
+        "channel_id": channel_id,
+        "message": message
+    }
+
+    response = driver.posts.create_post(message_options)
+    return response
+
+
+def message_pairs(driver, pairs, unmatched):
     """
     Send a group message to each pair of users notifying them of their pairing.
     """
     for pair in pairs:
         message_pair(driver, pair)
+
+    if unmatched:
+        message_unmatched(driver, unmatched)
 
 
 def get_channels(driver):

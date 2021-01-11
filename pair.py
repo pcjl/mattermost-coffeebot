@@ -34,11 +34,11 @@ def main():
         print("Successfully prepared participants database.")
 
         print("Pairing Coffee Buddies participants...")
-        pairs = utils.get_pairs(members)
+        pairs, unmatched = utils.get_pairs(members)
         print("Successfully paired Coffee Buddies participants.")
 
         print("Messaging paired Coffee Buddies participants...")
-        utils.message_pairs(driver, pairs)
+        utils.message_pairs(driver, pairs, unmatched)
         print("Successfully messaged paired Coffee Buddies participants.")
 
 
