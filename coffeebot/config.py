@@ -30,3 +30,8 @@ has drawn your opponent.
 PAIR_MESSAGE = """
 You have been matched to meet up! Please respond with your availabilities :)
 """
+
+UNMATCHED_MESSAGE = """
+Bad luck in lottery. All other Coffee Buddies have already been paired.
+Why not reaching out to someone you prefer?
+"""
