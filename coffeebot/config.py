@@ -24,7 +24,7 @@ SKIP_OFF_TOPIC = bool(os.getenv('COFFEEBOT_MATTERMOST_SKIP_OFF_TOPIC'))
 
 CHANNEL_MESSAGE = """
 Here we go with another round of paring you up. Stay tuned until the lottery
-has drawn your opponent.
+has drawn your Coffee Buddy.
 """
 
 PAIR_MESSAGE = """
