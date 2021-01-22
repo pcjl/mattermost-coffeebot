@@ -160,7 +160,7 @@ def get_pair(members):
     members.remove(member)
     members.remove(paired_member)
 
-    return (member, paired_member)
+    return member, paired_member
 
 
 def get_pairs(members):
@@ -169,15 +169,22 @@ def get_pairs(members):
     each user's previous pairings.
     Returns a list of tuples of user IDs.
     """
+    pairs = []
+    unmatched = None
+    if len(members) < 2:
+        return pairs, unmatched
+
     # In the case of an odd number of members, the user that is sequentially
     # last in the input list will have a lower chance of getting paired. In
     # order to make it fair, we shuffle the list so that everyone has an equal
     # chance of not getting paired
     random.shuffle(members)
 
-    pairs = []
     while len(members) > 1:
         pairs.append(get_pair(members))
+
+    if len(members) == 1:
+        unmatched = members[0]
 
     # Reset the is_paired flag for each user in preparation for the next time
     # users get paired
@@ -189,21 +196,19 @@ def get_pairs(members):
     session.execute(sql)
     session.commit()
 
-    return pairs
+    return pairs, unmatched
 
 
-def message_pair(driver, pair):
+def message_channel(driver, team_name, channel_name):
     """
-    Send a group message to both users in a pair notifying them of their
+    Send a channel message to channel to notifying members of upcoming
     pairing.
     Returns the JSON response from the Mattermost API.
     """
-    user_list = list(pair)
-
-    channel = driver.channels.create_group_message_channel(user_list)
+    channel = get_channel(driver, team_name, channel_name)
     channel_id = channel['id']
 
-    message = config.MESSAGE
+    message = config.CHANNEL_MESSAGE
     message_options = {
         "channel_id": channel_id,
         "message": message
@@ -213,9 +218,100 @@ def message_pair(driver, pair):
     return response
 
 
-def message_pairs(driver, pairs):
+def message_pair(driver, pair):
+    """
+    Send a group message to both users in a pair notifying them of their
+    pairing.
+    Returns the JSON response from the Mattermost API.
+    """
+    user_list = list(pair)
+    channel = driver.channels.create_group_message_channel(user_list)
+    channel_id = channel['id']
+
+    message = config.PAIR_MESSAGE
+    message_options = {
+        "channel_id": channel_id,
+        "message": message
+    }
+
+    response = driver.posts.create_post(message_options)
+    return response
+
+
+def message_unmatched(driver, unmatched):
+    """
+    Send a direct message to the unmatched user notifying them of others.
+    Returns the JSON response from the Mattermost API.
+    """
+    if not unmatched:
+        return
+
+    bot_id = driver.users.get_user('me')['id']
+    channel = driver.channels.create_direct_message_channel([bot_id, unmatched])
+    channel_id = channel['id']
+
+    message = config.UNMATCHED_MESSAGE
+    message_options = {
+        "channel_id": channel_id,
+        "message": message
+    }
+
+    response = driver.posts.create_post(message_options)
+    return response
+
+
+def message_pairs(driver, pairs, unmatched):
     """
     Send a group message to each pair of users notifying them of their pairing.
     """
     for pair in pairs:
         message_pair(driver, pair)
+
+    if unmatched:
+        message_unmatched(driver, unmatched)
+
+
+def get_channels(driver):
+    """
+    Retrieve all channels of any teams that the bot has been added to.
+    Returns a generator of tuples with team and channel names.
+    """
+    # Iterate all teams the bot has been added to
+    teams = driver.teams.get_user_teams(user_id='me')
+    for team in teams:
+
+        # Iterate all channels this bot has been added to
+        channels = driver.channels.get_channels_for_user(user_id='me', team_id=team['id'])
+        for channel in channels:
+
+            # Only public and private channels
+            if channel['type'] not in ('O', 'P'):
+                continue
+
+            # Skip default channels
+            if config.SKIP_TOWN_SQUARE and channel['name'] == 'town-square':
+                continue
+            if config.SKIP_OFF_TOPIC and channel['name'] == 'off-topic':
+                continue
+
+            '''
+            # Retrieve all members
+            members = set()
+            page_idx = 0
+            # - Iterate
+            while True:
+                params = {'page': page_idx}
+                memberships = driver.channels.get_channel_members(channel['id'], params=params)
+                if not memberships:
+                    break
+                for membership in memberships:
+                    assert membership['channel_id'] == channel['id']
+                    members.add(membership['user_id'])
+                page_idx += 1
+
+            # Exclude the bot itself
+            assert bot_user['id'] in members
+            members.remove(bot_user['id'])
+            '''
+
+            yield team['name'], channel['name']
