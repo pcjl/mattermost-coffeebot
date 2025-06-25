@@ -1,45 +1,53 @@
 import random
 
+from typing import List
+
 from sqlalchemy.sql import text
+from mattermost_api_reference_client.api.channels import get_channel_members, \
+    get_channel_by_name, create_group_channel
+from mattermost_api_reference_client.api.posts import create_post
+from mattermost_api_reference_client.api.teams import get_team_by_name
+from mattermost_api_reference_client.api.users import get_user
+from mattermost_api_reference_client.models import Team, Channel, CreatePostJsonBody
 
 from coffeebot import config, session
 from coffeebot.models import User, Pair
 
+def get_team(driver, team_name) -> Team:
+    """
+    Retrieve a team by name.
+    Returns the team object.
+    """
+    return get_team_by_name.sync(name=team_name, client=driver)
 
-def get_channel(driver, team_name, channel_name):
+def get_channel(driver, team_name, channel_name) -> Channel:
     """
     Retrieve a channel given a team and channel name.
-    Returns the JSON response from the Mattermost API.
+    Returns the Channel object
     """
-    response = driver.channels.get_channel_by_name_and_team_name(
-        team_name, channel_name)
-    return response
+    team = get_team(driver, team_name)
+    return get_channel_by_name.sync(channel_name=channel_name, team_id=team.id, client=driver)
 
-
-def get_channel_members(driver, team_name, channel_name):
+def get_channel_member_list(driver, team_name, channel_name) -> List[str]:
     """
     Retrieve all of the members from a channel given a team and channel name.
     Returns a list of user IDs sorted alphabetically.
     """
     channel = get_channel(driver, team_name, channel_name)
-    channel_id = channel['id']
 
     # By default, the Mattermost API will return only 60 members. Set this to
     # an amount that is at least the number of members in the channel to get
     # all members
-    params = {
-        'per_page': '10000'
-    }
-    response = driver.channels.get_channel_members(channel_id, params=params)
+    members = get_channel_members.sync(channel_id=channel.id, per_page=10000, client=driver)
 
-    bot = driver.users.get_user('me')
-    bot_id = bot['id']
+    bot = get_user.sync('me', client=driver)
+    bot_id = bot.id
 
     # Return all of the user IDs excluding the bot's user ID (don't want to
     # count the bot as a user in pairings)
     members = [
-        member['user_id'] for member in response if (
-            member['user_id'] != bot_id)]
+        member.user_id for member in members if (
+            member.user_id != bot_id)]
 
     # Sort the member list alphabetically so that when we create pairs in the
     # database using the list, we won't create duplicate pairs (A <-> B is the
@@ -200,16 +208,15 @@ def message_pair(driver, pair):
     """
     user_list = list(pair)
 
-    channel = driver.channels.create_group_message_channel(user_list)
-    channel_id = channel['id']
+    channel = create_group_channel.sync(json_body=user_list, client=driver)
 
     message = config.MESSAGE
-    message_options = {
-        "channel_id": channel_id,
+    message_options = CreatePostJsonBody.from_dict({
+        "channel_id": channel.id,
         "message": message
-    }
+    })
 
-    response = driver.posts.create_post(message_options)
+    response = create_post.sync(json_body=message_options, client=driver)
     return response
 
 

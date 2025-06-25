@@ -1,6 +1,6 @@
 # Mattermost Coffeebot
 
-*Mattermost Coffeebot* is a bot written in Python that interacts with the [Mattermost API](https://api.mattermost.com/) using [`mattermostdriver`](https://github.com/Vaelor/python-mattermost-driver) and pairs users in your Mattermost team on a regular basis to meet each other.
+*Mattermost Coffeebot* is a bot written in Python that interacts with the [Mattermost API](https://api.mattermost.com/) using [`mattermost-api-reference-client`](https://pypi.org/project/mattermost-api-reference-client/) and pairs users in your Mattermost team on a regular basis to meet each other.
 
 The bot will take users within a specific channel and message random pairs to meet up. The channel and frequency of these pairings can be configured.
 
@@ -19,7 +19,7 @@ The bot will take users within a specific channel and message random pairs to me
 
 ### Technologies Used
 
-- Python 3.4+
+- Python 3.12+
 - SQLite
 - Docker
 
@@ -35,7 +35,7 @@ Here are the current steps to deploying:
 
 1. Clone the repository into a directory
 
-2. Install Python 3.4+, `pip`, and `cron`.
+2. Install Python 3.12+, `pip`, and `cron`.
     - On Ubuntu, this can be done by running `sudo apt-get update && apt-get install -y -qq cron python3 python3-pip`
 
 3. Install the Python packages by running `sudo pip3 install -r requirements.txt` in the directory
