@@ -1,27 +1,25 @@
-from mattermostdriver import Driver
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+
+from mattermost_api_reference_client import AuthenticatedClient
+from mattermost_api_reference_client.api.users import get_user
 
 from coffeebot import config, utils
 
 
 def main():
     print("Creating Mattermost Driver...")
-    driver_options = {
-        'url': config.URL,
-        'login_id': config.USERNAME,
-        'password': config.PASSWORD,
-        'port': config.PORT
-    }
-    driver = Driver(driver_options)
+    driver = AuthenticatedClient(base_url=config.URL, token=config.TOKEN)
 
     print("Authenticating...")
-    driver.login()
-    driver.users.get_user('me')
+    get_user.sync('me', client=driver)
     print("Successfully authenticated.")
 
     print("Retrieving Coffee Buddies participants...")
     team_name = config.TEAM_NAME
     channel_name = config.CHANNEL_NAME
-    members = utils.get_channel_members(driver, team_name, channel_name)
+    members = utils.get_channel_member_list(driver, team_name, channel_name)
     print("Successfully retrieved Coffee Buddies participants.")
 
     print("Preparing participants database...")
