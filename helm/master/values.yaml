@@ -1,0 +1,12 @@
+projectName: coffee-bot
+environment: prod
+
+cronjob:
+  schedule: "0 13 * * 4"
+
+values:
+  COFFEEBOT_MATTERMOST_URL: mattermost.vpnn.space
+  COFFEEBOT_DATABASE_FILENAME: coffeebot.db
+  COFFEEBOT_MATTERMOST_PORT: 443
+  COFFEEBOT_MATTERMOST_CHANNEL: random-coffee
+  COFFEEBOT_MATTERMOST_TEAM: vpnn

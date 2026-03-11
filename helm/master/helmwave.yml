@@ -1,0 +1,22 @@
+project: mattermost-coffeebot
+version: "0.36.4"
+
+.options: &options
+  context: k8s-product-do-ams3
+  create_namespace: true
+  wait: true
+  timeout: 5m
+  max_history: 3
+
+releases:
+  - name: mattermost-coffeebot
+    <<: *options
+    namespace: mattermost-coffeebot
+    chart:
+      name: ./
+      version: 0.1.0
+    values:
+      - src: ./values-common.yaml
+      - src: ./values.yaml
+      - src: ./secret-values.yaml
+        renderer: sops

@@ -1,6 +1,6 @@
 import random
 
-from sqlalchemy.sql import text
+from sqlalchemy import text
 
 from coffeebot import config, session
 from coffeebot.models import User, Pair
@@ -9,7 +9,6 @@ from coffeebot.models import User, Pair
 def get_channel(driver, team_name, channel_name):
     """
     Retrieve a channel given a team and channel name.
-    Returns the JSON response from the Mattermost API.
     """
     response = driver.channels.get_channel_by_name_and_team_name(
         team_name, channel_name)
@@ -18,32 +17,22 @@ def get_channel(driver, team_name, channel_name):
 
 def get_channel_members(driver, team_name, channel_name):
     """
-    Retrieve all of the members from a channel given a team and channel name.
-    Returns a list of user IDs sorted alphabetically.
+    Retrieve all members from a channel.
+    Returns a sorted list of user IDs.
     """
     channel = get_channel(driver, team_name, channel_name)
     channel_id = channel['id']
 
-    # By default, the Mattermost API will return only 60 members. Set this to
-    # an amount that is at least the number of members in the channel to get
-    # all members
-    params = {
-        'per_page': '10000'
-    }
+    params = {'per_page': '10000'}
     response = driver.channels.get_channel_members(channel_id, params=params)
 
     bot = driver.users.get_user('me')
     bot_id = bot['id']
 
-    # Return all of the user IDs excluding the bot's user ID (don't want to
-    # count the bot as a user in pairings)
     members = [
-        member['user_id'] for member in response if (
-            member['user_id'] != bot_id)]
-
-    # Sort the member list alphabetically so that when we create pairs in the
-    # database using the list, we won't create duplicate pairs (A <-> B is the
-    # same as B <-> A)
+        member['user_id'] for member in response
+        if member['user_id'] != bot_id
+    ]
     members.sort()
 
     return members
@@ -51,61 +40,48 @@ def get_channel_members(driver, team_name, channel_name):
 
 def create_users(members):
     """
-    Create a User object in the database representing each Mattermost user
-    given a list of current users in the channel.
+    Sync users in the database with the current channel members.
     """
-    # Set only the users that exist in the input list as active
-    session.query(User).update({
-        'active': False})
-    session.query(User).filter(User.user_id.in_(members)).update({
-        'active': True
-    }, synchronize_session='fetch')
+    session.query(User).update({'active': False})
+    session.query(User).filter(User.user_id.in_(members)).update(
+        {'active': True}, synchronize_session='fetch'
+    )
 
     for member in members:
-        user = session.query(User).filter(User.user_id == member).all()
-
+        user = session.query(User).filter(User.user_id == member).first()
         if not user:
-            user = User(user_id=member, active=True)
-            session.add(user)
+            session.add(User(user_id=member, active=True))
 
     session.commit()
 
 
 def create_pairs(members):
     """
-    Create a Pair object in the database representing a potential pairing
-    between two Mattermost users given a list of current users in the channel.
+    Create all possible Pair records for current members.
     """
-    # In order to prevent duplicate pairings (A <-> B is the same as B <-> A),
-    # the input list must be alphabetically sorted
-    # We iterate over the list of members similar to a selection sort in order
-    # create every possible pairing
     for i, first_user in enumerate(members):
         for second_user in members[i + 1:]:
             pair = session.query(Pair).filter(
                 Pair.first_user_id == first_user,
-                Pair.second_user_id == second_user).all()
+                Pair.second_user_id == second_user
+            ).first()
 
             if not pair:
-                new_pair = Pair(
+                session.add(Pair(
                     first_user_id=first_user,
                     second_user_id=second_user,
-                    count=0)
-                session.add(new_pair)
+                    count=0
+                ))
 
     session.commit()
 
 
 def get_pair(members):
     """
-    Generate one pair of users from a list of members depending on the
-    frequencies of each user's previous pairings.
+    Generate one pair from the members list based on lowest pairing frequency.
     """
     member = members[0]
 
-    # Select a single user that is currently active in the channel, has not
-    # been paired with another member in this session yet, and has the lowest
-    # frequency of previous pairings with the current user
     sql = text("""
         SELECT paired_member
         FROM (
@@ -130,31 +106,25 @@ def get_pair(members):
     result = session.execute(sql, {'member': member})
     paired_member = result.first()[0]
 
-    # Increase the historical number of times this pair has been paired up
-    # before
-    sql = text("""
-        UPDATE pairs
-        SET count = count + 1
-        WHERE (first_user_id = :first_member
-            AND second_user_id = :second_member)
-        OR (first_user_id = :second_member
-            AND second_user_id = :first_member)
-    """)
+    session.execute(
+        text("""
+            UPDATE pairs
+            SET count = count + 1
+            WHERE (first_user_id = :first AND second_user_id = :second)
+            OR (first_user_id = :second AND second_user_id = :first)
+        """),
+        {'first': member, 'second': paired_member}
+    )
 
     session.execute(
-        sql, {'first_member': member, 'second_member': paired_member})
+        text("""
+            UPDATE users
+            SET is_paired = 1
+            WHERE user_id = :first OR user_id = :second
+        """),
+        {'first': member, 'second': paired_member}
+    )
 
-    # Mark both users as is_paired so that on the next pairing, we won't try to
-    # pair either user with a different user
-    sql = text("""
-        UPDATE users
-        SET is_paired = 1
-        WHERE user_id = :first_member
-        OR user_id = :second_member
-    """)
-
-    session.execute(
-        sql, {'first_member': member, 'second_member': paired_member})
     session.commit()
 
     members.remove(member)
@@ -165,28 +135,15 @@ def get_pair(members):
 
 def get_pairs(members):
     """
-    Pair up all users from a list of members depending on the frequencies of
-    each user's previous pairings.
-    Returns a list of tuples of user IDs.
+    Pair up all members and return list of tuples.
     """
-    # In the case of an odd number of members, the user that is sequentially
-    # last in the input list will have a lower chance of getting paired. In
-    # order to make it fair, we shuffle the list so that everyone has an equal
-    # chance of not getting paired
     random.shuffle(members)
 
     pairs = []
     while len(members) > 1:
         pairs.append(get_pair(members))
 
-    # Reset the is_paired flag for each user in preparation for the next time
-    # users get paired
-    sql = text("""
-        UPDATE users
-        SET is_paired = 0
-    """)
-
-    session.execute(sql)
+    session.execute(text("UPDATE users SET is_paired = 0"))
     session.commit()
 
     return pairs
@@ -194,28 +151,21 @@ def get_pairs(members):
 
 def message_pair(driver, pair):
     """
-    Send a group message to both users in a pair notifying them of their
-    pairing.
-    Returns the JSON response from the Mattermost API.
+    Send a group message to a pair of users.
     """
-    user_list = list(pair)
-
-    channel = driver.channels.create_group_message_channel(user_list)
+    channel = driver.channels.create_group_message_channel(list(pair))
     channel_id = channel['id']
 
-    message = config.MESSAGE
-    message_options = {
+    response = driver.posts.create_post({
         "channel_id": channel_id,
-        "message": message
-    }
-
-    response = driver.posts.create_post(message_options)
+        "message": config.MESSAGE
+    })
     return response
 
 
 def message_pairs(driver, pairs):
     """
-    Send a group message to each pair of users notifying them of their pairing.
+    Send group messages to all pairs.
     """
     for pair in pairs:
         message_pair(driver, pair)

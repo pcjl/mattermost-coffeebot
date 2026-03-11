@@ -1,0 +1,43 @@
+{{- if .Values.cronjob }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Values.projectName }}
+  namespace: {{ .Values.projectName }}
+  labels:
+    environment: {{ .Values.environment }}
+spec:
+  schedule: {{ .Values.cronjob.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ .Values.projectName }}
+            environment: {{ .Values.environment }}
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            doks.digitalocean.com/node-pool: {{ .Values.node_pool }}
+          {{- if .Values.image.pullSecrets }}
+          imagePullSecrets:
+            - name: {{ .Values.image.pullSecrets }}
+          {{- end }}
+          containers:
+            - name: {{ .Values.projectName }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["python3", "-u", "/app/pair.py"]
+              env:
+                {{- range $key, $value := .Values.values }}
+                - name: {{ $key }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.projectName }}-secrets
+                      key: {{ $key }}
+                {{- end }}
+              resources: {{ toYaml .Values.cronjob.resources | nindent 16 }}
+{{- end }}

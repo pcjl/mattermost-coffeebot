@@ -1,15 +1,14 @@
 from mattermostdriver import Driver
-
 from coffeebot import config, utils
-
 
 def main():
     print("Creating Mattermost Driver...")
     driver_options = {
         'url': config.URL,
-        'login_id': config.USERNAME,
-        'password': config.PASSWORD,
-        'port': config.PORT
+        'token': config.TOKEN,
+        'port': config.PORT,
+        'scheme': 'https',
+        'verify': True
     }
     driver = Driver(driver_options)
 
