@@ -96,14 +96,14 @@ node {
 
         }
     } catch (Exception e) {
-        if (branchName == 'main') {
+        if (branchName == 'master') {
             sh """ curl --data "parse_mode=HTML" --data "chat_id=${CI_TELEGRAM_CHAN_ID}" --data "text=<b>${JOB_NAME}-${branchName}</b>%0Adeploy failed! (╯°□°)╯︵┻━┻ %0A${BUILD_URL}" -X POST https://api.telegram.org/$CI_TELEGRAM_BOT_TOKEN/sendMessage """
         echo "Pipeline failed: ${e.getMessage()}"
         }
         currentBuild.result = 'FAILURE'
         throw e
     } finally {
-        if (!skipCI && branchName == 'main' && currentBuild.result != 'FAILURE') {
+        if (!skipCI && branchName == 'master' && currentBuild.result != 'FAILURE') {
             sh """ curl --data "parse_mode=HTML" --data "chat_id=${CI_TELEGRAM_CHAN_ID}" --data "text=<b>${JOB_NAME}-${branchName}</b>%0Adeploy done%0A${BUILD_URL}" -X POST https://api.telegram.org/$CI_TELEGRAM_BOT_TOKEN/sendMessage """
         }
         echo "Pipeline result: ${currentBuild.result == 'FAILURE' ? 'FAILURE' : 'SUCCESS'}"
